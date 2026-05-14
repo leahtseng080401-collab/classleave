@@ -183,3 +183,50 @@ export default function App() {
     </div>
   );
 }
+const [isAdmin, setIsAdmin] = useState(true);
+<button
+  onClick={() => setIsAdmin(!isAdmin)}
+  style={{
+    marginBottom: 10,
+    padding: "8px 12px",
+    borderRadius: "10px",
+    border: "none",
+    background: "black",
+    color: "white"
+  }}
+>
+  {isAdmin ? "班長模式 ON" : "班長模式 OFF"}
+</button>
+{isAdmin && (
+  <div style={{ marginBottom: 20 }}>
+    <h3>📊 班長後台</h3>
+    <p>總請假人數：{records.length}</p>
+  </div>
+)}
+{records.map((r, i) => (
+  <div key={i} style={cardStyle}>
+    <div>座號：{r.seat}</div>
+    <div>姓名：{r.name}</div>
+    <div>假別：{r.type}</div>
+    <div>日期：{r.date}</div>
+
+    {isAdmin && (
+      <button
+        onClick={() => {
+          const newRecords = records.filter((_, index) => index !== i);
+          setRecords(newRecords);
+        }}
+        style={{
+          marginTop: 10,
+          background: "red",
+          color: "white",
+          border: "none",
+          padding: "6px 10px",
+          borderRadius: "8px"
+        }}
+      >
+        刪除
+      </button>
+    )}
+  </div>
+))}
