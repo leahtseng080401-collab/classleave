@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import liff from "@line/liff";
 
 export default function App() {
+  const [userName, setUserName] = useState("");
+
   const [form, setForm] = useState({
     seat: "",
     name: "",
@@ -14,6 +17,36 @@ export default function App() {
 
   const seats = Array.from({ length: 38 }, (_, i) => i + 1);
 
+  // ✅ LIFF 初始化
+  useEffect(() => {
+    const initLiff = async () => {
+      try {
+        await liff.init({
+          liffId: "2010089457-Dd4wenNC"
+        });
+
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+
+        const profile = await liff.getProfile();
+        setUserName(profile.displayName);
+
+        // 👉 自動填姓名（重要升級）
+        setForm(prev => ({
+          ...prev,
+          name: profile.displayName
+        }));
+
+      } catch (err) {
+        console.error("LIFF error:", err);
+      }
+    };
+
+    initLiff();
+  }, []);
+
   const submit = () => {
     if (!form.name || !form.seat || !form.type) return;
 
@@ -21,7 +54,7 @@ export default function App() {
 
     setForm({
       seat: "",
-      name: "",
+      name: userName,
       type: "",
       date: "",
       proxy: "",
@@ -50,11 +83,15 @@ export default function App() {
       
       <h2 style={{ textAlign: "center" }}>📋 班級請假系統</h2>
 
+      {/* 👋 LIFF 使用者 */}
+      <h3 style={{ textAlign: "center" }}>
+        👋 歡迎 {userName}
+      </h3>
+
       {/* 表單 */}
       <div style={cardStyle}>
         <h3>新增請假</h3>
 
-        {/* 座號 */}
         <label>座號</label>
         <select
           style={inputStyle}
@@ -67,15 +104,13 @@ export default function App() {
           ))}
         </select>
 
-        {/* 姓名 */}
         <label>姓名</label>
         <input
           style={inputStyle}
           value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          readOnly
         />
 
-        {/* 假別 */}
         <label>假別</label>
         <select
           style={inputStyle}
@@ -89,7 +124,6 @@ export default function App() {
           <option>遲到</option>
         </select>
 
-        {/* 日期 */}
         <label>日期</label>
         <input
           type="date"
@@ -97,31 +131,6 @@ export default function App() {
           value={form.date}
           onChange={(e) => setForm({ ...form, date: e.target.value })}
         />
-
-        {/* 代理人 */}
-        <label>職務代理人</label>
-        <select
-          style={inputStyle}
-          value={form.proxy}
-          onChange={(e) => setForm({ ...form, proxy: e.target.value })}
-        >
-          <option value="">請選擇</option>
-          {seats.map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
-
-        {/* 學校系統 */}
-        <label>學校系統</label>
-        <select
-          style={inputStyle}
-          value={form.school}
-          onChange={(e) => setForm({ ...form, school: e.target.value })}
-        >
-          <option value="">是否已完成</option>
-          <option value="yes">已完成</option>
-          <option value="no">尚未完成</option>
-        </select>
 
         <button
           onClick={submit}
@@ -152,8 +161,6 @@ export default function App() {
             <div>姓名：{r.name}</div>
             <div>假別：{r.type}</div>
             <div>日期：{r.date}</div>
-            <div>代理人：{r.proxy}</div>
-            <div>學校系統：{r.school}</div>
           </div>
         ))
       )}
