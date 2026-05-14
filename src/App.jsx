@@ -71,17 +71,30 @@ export default function App() {
   };
 
   const cardStyle = {
-    background: "white",
-    padding: "15px",
-    borderRadius: "16px",
-    boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
-    marginBottom: "15px"
+    background: "rgba(255,255,255,0.9)",
+    padding: "16px",
+    borderRadius: "20px",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
+    marginBottom: "16px",
+    backdropFilter: "blur(10px)"
   };
 
   return (
-    <div style={{ background: "#f5f6f8", minHeight: "100vh", padding: 20, fontFamily: "sans-serif" }}>
+    <div style={{
+      minHeight: "100vh",
+      padding: 16,
+      fontFamily: "system-ui",
+      background: "linear-gradient(180deg, #6366f1, #a855f7)",
+    }}>
       
-      <h2 style={{ textAlign: "center" }}>📋 班級請假系統</h2>
+      <h2 style={{
+  textAlign: "center",
+  color: "white",
+  fontSize: "22px",
+  marginBottom: "10px"
+}}>
+📋 班級請假系統
+</h2>
 
       {/* 👋 LIFF 使用者 */}
       <h3 style={{ textAlign: "center" }}>
@@ -132,21 +145,24 @@ export default function App() {
           onChange={(e) => setForm({ ...form, date: e.target.value })}
         />
 
-        <button
-          onClick={submit}
-          style={{
-            marginTop: 15,
-            width: "100%",
-            padding: "12px",
-            borderRadius: "12px",
-            border: "none",
-            background: "#4f46e5",
-            color: "white",
-            fontSize: "16px"
-          }}
-        >
-          送出請假
-        </button>
+<button
+  onClick={submit}
+  style={{
+    marginTop: 15,
+    width: "100%",
+    padding: "14px",
+    borderRadius: "16px",
+    border: "none",
+    background: "linear-gradient(90deg, #6366f1, #a855f7)",
+    color: "white",
+    fontWeight: "bold",
+    fontSize: "16px",
+    boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
+    cursor: "pointer"
+  }}
+>
+  ✈️ 送出請假
+</button>
       </div>
 
       {/* 紀錄 */}
