@@ -1,8 +1,18 @@
 import { useEffect, useState } from "react";
 import liff from "@line/liff";
 
+import { db } from "./firebase";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc
+} from "firebase/firestore";
+
 export default function App() {
   const [userName, setUserName] = useState("");
+  const [records, setRecords] = useState([]);
 
   const [form, setForm] = useState({
     seat: "",
@@ -13,15 +23,12 @@ export default function App() {
     school: ""
   });
 
-  const [records, setRecords] = useState([]);
-
-  // 🔐 班長系統
   const [isAdmin, setIsAdmin] = useState(false);
   const [password, setPassword] = useState("");
 
   const seats = Array.from({ length: 38 }, (_, i) => i + 1);
 
-  // ✅ LIFF 初始化
+  // 🔥 LIFF
   useEffect(() => {
     const initLiff = async () => {
       try {
@@ -35,25 +42,42 @@ export default function App() {
         }
 
         const profile = await liff.getProfile();
+
         setUserName(profile.displayName);
 
-        setForm(prev => ({
+        setForm((prev) => ({
           ...prev,
           name: profile.displayName
         }));
-
       } catch (err) {
-        console.error("LIFF error:", err);
+        console.error(err);
       }
     };
 
     initLiff();
+    loadData();
   }, []);
 
-  const submit = () => {
+  // 📥 讀 Firebase
+  const loadData = async () => {
+    const snapshot = await getDocs(collection(db, "records"));
+
+    const data = snapshot.docs.map((d) => ({
+      id: d.id,
+      ...d.data()
+    }));
+
+    setRecords(data);
+  };
+
+  // 📤 新增資料
+  const submit = async () => {
     if (!form.name || !form.seat || !form.type) return;
 
-    setRecords([form, ...records]);
+    await addDoc(collection(db, "records"), {
+      ...form,
+      createdAt: new Date()
+    });
 
     setForm({
       seat: "",
@@ -63,6 +87,14 @@ export default function App() {
       proxy: "",
       school: ""
     });
+
+    loadData();
+  };
+
+  // 🗑️ 刪除
+  const deleteRecord = async (id) => {
+    await deleteDoc(doc(db, "records", id));
+    loadData();
   };
 
   const inputStyle = {
@@ -79,8 +111,7 @@ export default function App() {
     padding: "16px",
     borderRadius: "20px",
     boxShadow: "0 10px 30px rgba(0,0,0,0.15)",
-    marginBottom: "16px",
-    backdropFilter: "blur(10px)"
+    marginBottom: "16px"
   };
 
   return (
@@ -89,33 +120,25 @@ export default function App() {
         minHeight: "100vh",
         padding: 16,
         fontFamily: "system-ui",
-        background: "linear-gradient(180deg, #6366f1, #a855f7)",
+        background: "linear-gradient(180deg, #6366f1, #a855f7)"
       }}
     >
-
-      {/* 標題 */}
-      <h2 style={{
-        textAlign: "center",
-        color: "white",
-        fontSize: "22px",
-        marginBottom: "10px"
-      }}>
+      <h2 style={{ textAlign: "center", color: "white" }}>
         📋 班級請假系統
       </h2>
 
-      {/* 使用者 */}
       <h3 style={{ textAlign: "center", color: "white" }}>
-        👋 歡迎 {userName}
+        👋 {userName}
       </h3>
 
-      {/* 🔐 密碼登入（未登入才顯示） */}
+      {/* 🔐 班長登入 */}
       {!isAdmin && (
         <div style={cardStyle}>
-          <h3>🔐 班長登入</h3>
+          <h3>班長登入</h3>
 
           <input
             type="password"
-            placeholder="輸入班長密碼"
+            placeholder="輸入密碼"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             style={inputStyle}
@@ -123,21 +146,17 @@ export default function App() {
 
           <button
             onClick={() => {
-              if (password === "1234") {
-                setIsAdmin(true);
-              } else {
-                alert("密碼錯誤");
-              }
+              if (password === "1234") setIsAdmin(true);
+              else alert("密碼錯誤");
             }}
             style={{
               marginTop: 10,
               width: "100%",
               padding: "10px",
-              borderRadius: "12px",
-              border: "none",
               background: "black",
               color: "white",
-              fontWeight: "bold"
+              border: "none",
+              borderRadius: "10px"
             }}
           >
             進入班長模式
@@ -145,28 +164,9 @@ export default function App() {
         </div>
       )}
 
-      {/* 🔓 退出班長 */}
       {isAdmin && (
-        <button
-          onClick={() => setIsAdmin(false)}
-          style={{
-            marginBottom: 10,
-            padding: "8px 12px",
-            borderRadius: "10px",
-            border: "none",
-            background: "red",
-            color: "white"
-          }}
-        >
-          退出班長模式
-        </button>
-      )}
-
-      {/* 📊 班長後台 */}
-      {isAdmin && (
-        <div style={{ marginBottom: 20, color: "white", textAlign: "center" }}>
-          <h3>📊 班長後台</h3>
-          <p>總請假人數：{records.length}</p>
+        <div style={{ textAlign: "center", color: "white" }}>
+          📊 總請假人數：{records.length}
         </div>
       )}
 
@@ -174,35 +174,31 @@ export default function App() {
       <div style={cardStyle}>
         <h3>新增請假</h3>
 
-        <label>座號</label>
         <select
           style={inputStyle}
           value={form.seat}
           onChange={(e) => setForm({ ...form, seat: e.target.value })}
         >
-          <option value="">請選擇</option>
+          <option value="">座號</option>
           {seats.map((s) => (
-            <option key={s} value={s}>{s}</option>
+            <option key={s}>{s}</option>
           ))}
         </select>
 
-        <label>姓名</label>
         <input style={inputStyle} value={form.name} readOnly />
 
-        <label>假別</label>
         <select
           style={inputStyle}
           value={form.type}
           onChange={(e) => setForm({ ...form, type: e.target.value })}
         >
-          <option value="">請選擇</option>
+          <option value="">假別</option>
           <option>病假</option>
           <option>事假</option>
           <option>公假</option>
           <option>遲到</option>
         </select>
 
-        <label>日期</label>
         <input
           type="date"
           style={inputStyle}
@@ -216,13 +212,11 @@ export default function App() {
             marginTop: 15,
             width: "100%",
             padding: "14px",
-            borderRadius: "16px",
+            borderRadius: "15px",
             border: "none",
-            background: "linear-gradient(90deg, #6366f1, #a855f7)",
+            background: "linear-gradient(90deg,#6366f1,#a855f7)",
             color: "white",
-            fontWeight: "bold",
-            fontSize: "16px",
-            cursor: "pointer"
+            fontWeight: "bold"
           }}
         >
           ✈️ 送出請假
@@ -230,39 +224,32 @@ export default function App() {
       </div>
 
       {/* 紀錄 */}
-      <h3 style={{ color: "white" }}>今日請假紀錄</h3>
+      <h3 style={{ color: "white" }}>請假紀錄</h3>
 
-      {records.length === 0 ? (
-        <p style={{ color: "#eee" }}>目前沒有資料</p>
-      ) : (
-        records.map((r, i) => (
-          <div key={i} style={cardStyle}>
-            <div>座號：{r.seat}</div>
-            <div>姓名：{r.name}</div>
-            <div>假別：{r.type}</div>
-            <div>日期：{r.date}</div>
+      {records.map((r) => (
+        <div key={r.id} style={cardStyle}>
+          <div>座號：{r.seat}</div>
+          <div>姓名：{r.name}</div>
+          <div>假別：{r.type}</div>
+          <div>日期：{r.date}</div>
 
-            {isAdmin && (
-              <button
-                onClick={() => {
-                  const newRecords = records.filter((_, index) => index !== i);
-                  setRecords(newRecords);
-                }}
-                style={{
-                  marginTop: 10,
-                  background: "red",
-                  color: "white",
-                  border: "none",
-                  padding: "6px 10px",
-                  borderRadius: "8px"
-                }}
-              >
-                刪除
-              </button>
-            )}
-          </div>
-        ))
-      )}
+          {isAdmin && (
+            <button
+              onClick={() => deleteRecord(r.id)}
+              style={{
+                marginTop: 10,
+                background: "red",
+                color: "white",
+                border: "none",
+                padding: "6px 10px",
+                borderRadius: "8px"
+              }}
+            >
+              刪除
+            </button>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
