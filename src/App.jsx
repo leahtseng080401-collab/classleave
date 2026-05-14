@@ -3,7 +3,6 @@ import liff from "@line/liff";
 
 export default function App() {
   const [userName, setUserName] = useState("");
-  const [isAdmin, setIsAdmin] = useState(true);
 
   const [form, setForm] = useState({
     seat: "",
@@ -15,6 +14,10 @@ export default function App() {
   });
 
   const [records, setRecords] = useState([]);
+
+  // 🔐 班長系統
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [password, setPassword] = useState("");
 
   const seats = Array.from({ length: 38 }, (_, i) => i + 1);
 
@@ -67,7 +70,8 @@ export default function App() {
     padding: "10px",
     marginTop: "5px",
     borderRadius: "10px",
-    border: "1px solid #ddd"
+    border: "none",
+    background: "#f3f4f6"
   };
 
   const cardStyle = {
@@ -99,27 +103,66 @@ export default function App() {
         📋 班級請假系統
       </h2>
 
-      {/* 👋 使用者 */}
+      {/* 使用者 */}
       <h3 style={{ textAlign: "center", color: "white" }}>
         👋 歡迎 {userName}
       </h3>
 
-      {/* 班長模式 */}
-      <button
-        onClick={() => setIsAdmin(!isAdmin)}
-        style={{
-          marginBottom: 10,
-          padding: "8px 12px",
-          borderRadius: "10px",
-          border: "none",
-          background: "black",
-          color: "white"
-        }}
-      >
-        {isAdmin ? "班長模式 ON" : "班長模式 OFF"}
-      </button>
+      {/* 🔐 密碼登入（未登入才顯示） */}
+      {!isAdmin && (
+        <div style={cardStyle}>
+          <h3>🔐 班長登入</h3>
 
-      {/* 班長後台 */}
+          <input
+            type="password"
+            placeholder="輸入班長密碼"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={inputStyle}
+          />
+
+          <button
+            onClick={() => {
+              if (password === "1234") {
+                setIsAdmin(true);
+              } else {
+                alert("密碼錯誤");
+              }
+            }}
+            style={{
+              marginTop: 10,
+              width: "100%",
+              padding: "10px",
+              borderRadius: "12px",
+              border: "none",
+              background: "black",
+              color: "white",
+              fontWeight: "bold"
+            }}
+          >
+            進入班長模式
+          </button>
+        </div>
+      )}
+
+      {/* 🔓 退出班長 */}
+      {isAdmin && (
+        <button
+          onClick={() => setIsAdmin(false)}
+          style={{
+            marginBottom: 10,
+            padding: "8px 12px",
+            borderRadius: "10px",
+            border: "none",
+            background: "red",
+            color: "white"
+          }}
+        >
+          退出班長模式
+        </button>
+      )}
+
+      {/* 📊 班長後台 */}
       {isAdmin && (
         <div style={{ marginBottom: 20, color: "white", textAlign: "center" }}>
           <h3>📊 班長後台</h3>
@@ -179,7 +222,6 @@ export default function App() {
             color: "white",
             fontWeight: "bold",
             fontSize: "16px",
-            boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
             cursor: "pointer"
           }}
         >
