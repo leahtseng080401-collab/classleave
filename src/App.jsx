@@ -72,24 +72,41 @@ export default function App() {
 
   // 📤 新增資料
   const submit = async () => {
-    if (!form.name || !form.seat || !form.type) return;
-
-    await addDoc(collection(db, "records"), {
-      ...form,
-      createdAt: new Date()
-    });
-
-    setForm({
-      seat: "",
-      name: userName,
-      type: "",
-      date: "",
-      proxy: "",
-      school: ""
-    });
-
-    loadData();
+    try {
+      if (!form.name || !form.seat || !form.type) {
+        alert("請填完整");
+        return;
+      }
+  
+      await addDoc(collection(db, "records"), {
+        seat: form.seat,
+        name: form.name,
+        type: form.type,
+        date: form.date,
+        proxy: form.proxy,
+        school: form.school,
+        createdAt: new Date()
+      });
+  
+      alert("成功送出🔥");
+  
+      loadData();
+  
+      setForm({
+        seat: "",
+        name: userName,
+        type: "",
+        date: "",
+        proxy: "",
+        school: ""
+      });
+  
+    } catch (err) {
+      console.error(err);
+      alert("Firebase 錯誤");
+    }
   };
+  
 
   // 🗑️ 刪除
   const deleteRecord = async (id) => {
